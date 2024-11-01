@@ -1,0 +1,61 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.5'
+    id 'io.spring.dependency-management' version '1.1.6'
+}
+
+group = 'org.example.lab1'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '21'
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    // Minimal Coverage
+    minimumCoveragePerFile = 0.5
+    filesExcludedFromCoverage = [
+            "**/*MarketApplication.*",
+            "**/config/*Configuration.*"
+    ]
+}
+
+apply from: "${rootProject.projectDir}/gradle/test.gradle"
+apply from: "${rootProject.projectDir}/gradle/jacoco.gradle"
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+    // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui
+// https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui
+    implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.1.0'
+    // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui
+    implementation 'org.springframework:spring-context:6.1.14' // адаптуйте під вашу версію
+
+//    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.0'
+//    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.18.0'
+//    implementation 'org.springframework.boot:spring-boot-starter-data-jpa' // Uncomment if needed
+    implementation 'jakarta.servlet:jakarta.servlet-api:6.1.0' // Provided scope for servlet API
+    implementation 'org.thymeleaf:thymeleaf-spring6:3.1.2.RELEASE'
+
+    // Testing dependencies
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+//    testImplementation 'io.springfox:springfox-swagger2:3.0.0'
+
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // MapStruct annotation processor
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs += ['-parameters']
+}
+
+
+
+test {
+    useJUnitPlatform()
+}
