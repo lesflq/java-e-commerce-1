@@ -3,7 +3,6 @@ package org.example.lab1.service;
 import org.example.lab1.DTO.ProductDTO;
 import org.example.lab1.domain.Product;
 import org.example.lab1.mappers.ProductMapper;
-import org.example.lab1.service.ProductService;
 import org.example.lab1.service.implementation.ProductServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,18 +30,9 @@ class ProductServiceTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
 
-        productDTO = new ProductDTO();
-        productDTO.setName("Test Product");
-        productDTO.setPrice(100.0);
-        productDTO.setDescription("Test Description");
-        productDTO.setCategoryId(1L);
+        productDTO = ProductDTO.builder().name("Test Product").price(100.0).description("Test Description").categoryId(1L).build();
 
-        product = new Product();
-        product.setId(1L);
-        product.setName("Test Product");
-        product.setPrice(100.0);
-        product.setDescription("Test Description");
-        product.setCategoryId(1L);
+        product = Product.builder().id(1L).name("Test Product").price(100.0).description("Test Description").categoryId(1L).build();
 
         when(productMapper.toEntity(productDTO)).thenReturn(product);
         when(productMapper.toDTO(product)).thenReturn(productDTO);
@@ -88,8 +78,7 @@ class ProductServiceTest {
     void testUpdateProduct() {
         productService.createProduct(productDTO); // Збереження продукту для подальшого оновлення
 
-        productDTO.setName("Updated Product");
-        productDTO.setPrice(150.0);
+        productDTO = productDTO.toBuilder().name("Updated Product").price(150.0).build();
 
         when(productMapper.toDTO(any(Product.class))).thenReturn(productDTO);
 

@@ -36,17 +36,14 @@ class ProductControllerIT {
 
     @Test
     void testCreateProduct() throws Exception {
-        ProductDTO productDTO = new ProductDTO();
-        productDTO.setName("Test Product Star"); // Обов'язкове поле
-        productDTO.setPrice(100.0);         // Обов'язкове поле
 
-        ProductDTO createdProduct = new ProductDTO();
-        createdProduct.setName("Test Product Comet");
-        createdProduct.setPrice(1523.0);
+        ProductDTO productDTO = ProductDTO.builder().name("Test Product Star").price(100.0).build();
+
+        ProductDTO createdProduct = ProductDTO.builder().name("Test Product Comet").price(1523.0).build();
 
         when(productService.createProduct(any(ProductDTO.class))).thenReturn(createdProduct);
 
-        mockMvc.perform(post("/api/v1/product")
+        mockMvc.perform(post("/api/v1/products")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(productDTO)))
                 .andExpect(status().isCreated())
@@ -72,11 +69,11 @@ class ProductControllerIT {
     @Test
     void testGetProductById() throws Exception {
         Long productId = 1L;
-        ProductDTO product = new ProductDTO(); // Заповни даними продукту
+        ProductDTO product = ProductDTO.builder().build(); // Заповни даними продукту
 
         when(productService.getProductById(anyLong())).thenReturn(product);
 
-        mockMvc.perform(get("/api/v1/product/{id}", productId)
+        mockMvc.perform(get("/api/v1/products/{id}", productId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().json(objectMapper.writeValueAsString(product)));
@@ -87,17 +84,13 @@ class ProductControllerIT {
     @Test
     void testUpdateProduct() throws Exception {
         Long productId = 1L;
-        ProductDTO productDTO = new ProductDTO();
-        productDTO.setName("Test Product Star"); // Обов'язкове поле
-        productDTO.setPrice(100.0);         // Обов'язкове поле
+        ProductDTO productDTO = ProductDTO.builder().name("Test Product Star").price(100.0).build();
 
-        ProductDTO updatedProduct = new ProductDTO();
-        updatedProduct.setName("Test Product Comet");
-        updatedProduct.setPrice(1902.0); // Заповни даними оновленого продукту
+        ProductDTO updatedProduct = ProductDTO.builder().name("Test Product Comet").price(1902.0).build();
 
         when(productService.updateProduct(anyLong(), any(ProductDTO.class))).thenReturn(updatedProduct);
 
-        mockMvc.perform(put("/api/v1/product/{id}", productId)
+        mockMvc.perform(put("/api/v1/products/{id}", productId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(productDTO)))
                 .andExpect(status().isOk())
@@ -110,7 +103,7 @@ class ProductControllerIT {
     void testDeleteProduct() throws Exception {
         Long productId = 1L;
 
-        mockMvc.perform(delete("/api/v1/product/{id}", productId)
+        mockMvc.perform(delete("/api/v1/products/{id}", productId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 

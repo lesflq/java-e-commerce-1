@@ -27,8 +27,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDTO createProduct(ProductDTO productDTO) {
-        Product product = productMapper.toEntity(productDTO);
-        product.setId(productIdSequence++); // set unique ID
+        Product product = productMapper.toEntity(productDTO).toBuilder().id(productIdSequence++).build();
         mockProductDatabase.put(product.getId(), product); // save data in "plug-database"
         return productMapper.toDTO(product);
     }
@@ -50,15 +49,13 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDTO updateProduct(Long id, ProductDTO productDTO) {
-        Product product = mockProductDatabase.get(id);
+        Product product = mockProductDatabase.get(id).toBuilder().name(productDTO.getName()).price(productDTO.getPrice())
+                .description(productDTO.getDescription()).categoryId(productDTO.getCategoryId()).build();
         System.out.println("Product retrieved: " + product);
         if (product == null) {
             throw new RuntimeException("Product not found");
         }
-        product.setName(productDTO.getName());
-        product.setPrice(productDTO.getPrice());
-        product.setDescription(productDTO.getDescription());
-        product.setCategoryId(productDTO.getCategoryId());
+
         mockProductDatabase.put(id, product); // insert updated data
         return productMapper.toDTO(product);
     }
