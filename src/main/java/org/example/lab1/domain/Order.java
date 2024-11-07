@@ -12,6 +12,4 @@ public class Order {
     List<Product> products;
     LocalDateTime orderDate;
     String customerName;
-
-
 }
