@@ -2,6 +2,7 @@ package org.example.lab1.controllers;
 
 import org.example.lab1.config.GreetingProperties;
 import org.example.lab1.config.GreetingProperties.CatGreeting;
+import org.example.lab1.exception.CatNotFoundException;
 import org.example.lab1.featuretoggle.FeatureToggles;
 import org.example.lab1.featuretoggle.annotation.FeatureToggle;
 import org.example.lab1.featuretoggle.exception.FeatureNotAvailableException;
@@ -32,7 +33,7 @@ public class GreetingController {
     public ResponseEntity<String> getCustomerById(@PathVariable String name) {
         String greeting = ofNullable(greetingProperties.getGreetings()
                 .get(name)).map(CatGreeting::getMessage).orElseThrow(() ->
-                new NoSuchElementException("Greeting not found"));
+                new CatNotFoundException(name));
         return ResponseEntity.ok(greeting);
     }
 }
