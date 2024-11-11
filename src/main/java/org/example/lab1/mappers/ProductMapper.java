@@ -1,7 +1,7 @@
 package org.example.lab1.mappers;
 
 import org.example.lab1.DTO.ProductDTO;
-import org.example.lab1.domain.Product;
+import org.example.lab1.domain.product.Product;
 import org.mapstruct.Mapper;
 
 

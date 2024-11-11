@@ -1,7 +1,7 @@
 package org.example.lab1.service;
 
 import org.example.lab1.DTO.ProductDTO;
-import org.example.lab1.domain.Product;
+import org.example.lab1.domain.product.Product;
 import org.example.lab1.mappers.ProductMapper;
 import org.example.lab1.service.implementation.ProductServiceImpl;
 import org.junit.jupiter.api.BeforeEach;

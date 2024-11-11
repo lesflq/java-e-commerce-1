@@ -1,8 +1,7 @@
 package org.example.lab1.service.implementation;
 
-import io.swagger.v3.oas.annotations.Parameter;
 import org.example.lab1.DTO.ProductDTO;
-import org.example.lab1.domain.Product;
+import org.example.lab1.domain.product.Product;
 import org.example.lab1.mappers.ProductMapper;
 import org.example.lab1.service.ProductService;
 import org.example.lab1.service.repositories.ProductRepository;
@@ -11,9 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -39,7 +36,7 @@ public class ProductServiceImpl implements ProductService {
         List<Product> products = new ArrayList<>(productRepository.findAll());
         return productMapper.toProductDTOList(products);
     }
-    //Product product = productRepository.findById(id).orElse(null);
+
     @Transactional
     public ProductDTO getProductById(Long id) {
         Product product = productRepository.findById(id)
