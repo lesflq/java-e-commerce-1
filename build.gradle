@@ -27,20 +27,16 @@ apply from: "${rootProject.projectDir}/gradle/jacoco.gradle"
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    implementation 'org.springframework.boot:spring-boot-devtools'
     implementation 'org.mapstruct:mapstruct:1.5.5.Final'
-    // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui
-// https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui
+
     implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.1.0'
-    // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui
-    implementation 'org.springframework:spring-context:6.1.14' // адаптуйте під вашу версію
-    // https://mvnrepository.com/artifact/org.projectlombok/lombok
+    implementation 'org.springframework:spring-context:6.1.14'
     compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.34'
     implementation 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 
-//    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.0'
-//    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.18.0'
-//    implementation 'org.springframework.boot:spring-boot-starter-data-jpa' // Uncomment if needed
-    implementation 'jakarta.servlet:jakarta.servlet-api:6.1.0' // Provided scope for servlet API
+    implementation 'jakarta.servlet:jakarta.servlet-api:6.1.0'
     implementation 'org.thymeleaf:thymeleaf-spring6:3.1.2.RELEASE'
 
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
