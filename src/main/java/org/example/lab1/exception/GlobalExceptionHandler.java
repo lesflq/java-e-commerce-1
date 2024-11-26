@@ -7,7 +7,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
-
+import org.example.lab1.featuretoggle.exception.FeatureNotAvailableException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -65,5 +65,14 @@ public class GlobalExceptionHandler {
         );
 
         return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    @ExceptionHandler(CatNotFoundException.class)
+    public ResponseEntity<String> handleCatNotFoundException(CatNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(FeatureNotAvailableException.class)
+    public ResponseEntity<Void> handleFeatureToggleException(FeatureNotAvailableException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 }
