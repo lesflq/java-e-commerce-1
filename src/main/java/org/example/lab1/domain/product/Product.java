@@ -1,15 +1,15 @@
-package org.example.lab1.domain;
+package org.example.lab1.domain.product;
 
+import lombok.*;
 
-import lombok.Builder;
-import lombok.Value;
+import java.math.BigDecimal;
 
 @Value
 @Builder(toBuilder = true)
 public class Product {
     long id;
     String name;
-    double price;
+    BigDecimal price;
     long categoryId;
     String description;
 }

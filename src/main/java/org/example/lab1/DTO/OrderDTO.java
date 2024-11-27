@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import lombok.Builder;
 import lombok.Value;
-import org.example.lab1.domain.Product;
+import org.example.lab1.domain.product.Product;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,12 +15,8 @@ import java.util.List;
 public class OrderDTO {
     long id;
     List<Product> products;
-    @NotNull
-    @Past
     LocalDateTime orderDate;
     String customerName;
     @Email
     String email;
-
-
 }

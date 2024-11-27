@@ -1,10 +1,13 @@
 package org.example.lab1.service.implementation;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.example.lab1.DTO.ProductDTO;
-import org.example.lab1.domain.Product;
 import org.example.lab1.mappers.ProductMapper;
+import org.example.lab1.repository.CategoryRepository;
+import org.example.lab1.repository.entity.category.CategoryEntity;
+import org.example.lab1.repository.entity.product.ProductEntity;
 import org.example.lab1.service.ProductService;
-import org.example.lab1.service.repository.ProductRepository;
+import org.example.lab1.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,30 +19,47 @@ import java.util.List;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
     private final ProductMapper productMapper;
 
     @Autowired
-    public ProductServiceImpl(ProductMapper productMapper, ProductRepository productRepository) {
+    public ProductServiceImpl(ProductMapper productMapper,
+                              ProductRepository productRepository,
+                              CategoryRepository categoryRepository) {
         this.productMapper = productMapper;
         this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     @Transactional
     public ProductDTO createProduct(ProductDTO productDTO) {
-        Product product = productMapper.toEntity(productDTO);
-        Product savedProduct = productRepository.save(product);
+        CategoryEntity category = categoryRepository.findById(productDTO.getCategoryId())
+                .orElseThrow(() -> new EntityNotFoundException("Category not found with ID: " + productDTO.getCategoryId()));
+
+        // Створюємо продукт
+        ProductEntity product = ProductEntity.builder()
+                .name(productDTO.getName())
+                .price(productDTO.getPrice())
+                .description(productDTO.getDescription())
+                .category(category) // Установлюємо категорію
+                .build();
+
+        // Зберігаємо продукт
+        ProductEntity savedProduct = productRepository.save(product);
+
+        // Повертаємо DTO
         return productMapper.toDTO(savedProduct);
     }
 
     @Transactional
     public List<ProductDTO> getAllProducts() {
-        List<Product> products = new ArrayList<>(productRepository.findAll());
+        List<ProductEntity> products = new ArrayList<>(productRepository.findAll());
         return productMapper.toProductDTOList(products);
     }
 
     @Transactional
     public ProductDTO getProductById(Long id) {
-        Product product = productRepository.findById(id)
+        ProductEntity product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         return productMapper.toDTO(product);
@@ -47,12 +67,16 @@ public class ProductServiceImpl implements ProductService {
 
     @Transactional
     public ProductDTO updateProduct(Long id, ProductDTO productDTO) {
-        Product product = productRepository.findById(id).
-                orElseThrow(() -> new RuntimeException("Product not found"))
-                .toBuilder().name(productDTO.getName()).price(productDTO.getPrice())
-                .description(productDTO.getDescription()).categoryId(productDTO.getCategoryId()).build();
+        ProductEntity product = productRepository.findById(id).
+                orElseThrow(() -> new RuntimeException("Product not found"));
+
+        CategoryEntity category = categoryRepository.findById(productDTO.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        product.toBuilder().name(productDTO.getName()).price(productDTO.getPrice())
+                .description(productDTO.getDescription()).category(category).build();
         System.out.println("Product retrieved: " + product);
-        Product savedProduct = productRepository.save(product);
+        ProductEntity savedProduct = productRepository.save(product);
         return productMapper.toDTO(savedProduct);
     }
 

@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Value;
 import org.example.lab1.validation.CosmicWordCheck;
 
+import java.math.BigDecimal;
+
 @Value
 @Builder(toBuilder = true)
 public class ProductDTO {
@@ -17,7 +19,7 @@ public class ProductDTO {
     String name;
     @NotNull(message = "Price cannot be null")
     @DecimalMin(value = "0.01", message = "Price must be greater than 0")
-    double price;
+    BigDecimal price;
     @NotNull(message = "Category ID cannot be null")
     long categoryId;
     String description;
