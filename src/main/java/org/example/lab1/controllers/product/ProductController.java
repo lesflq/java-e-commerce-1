@@ -1,4 +1,4 @@
-package org.example.lab1.controllers;
+package org.example.lab1.controllers.product;
 
 import jakarta.validation.Valid;
 import org.example.lab1.DTO.ProductDTO;

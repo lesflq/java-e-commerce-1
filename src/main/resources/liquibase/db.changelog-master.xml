@@ -5,18 +5,28 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
 
-    <changeSet id="1-create-category-table" author="lesflq">
+    <changeSet author="lesflq" id="1-create-category-table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="Category"/>
+            </not>
+        </preConditions>
         <createTable tableName="Category">
-            <column name="id" type="BIGSERIAL" autoIncrement="true">
-                <constraints primaryKey="true" />
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="name" type="VARCHAR(255)">
-                <constraints nullable="false" unique="true" />
+                <constraints nullable="false"/>
             </column>
         </createTable>
     </changeSet>
 
     <changeSet id="2-create-product-table" author="lesflq">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="Product"/>
+            </not>
+        </preConditions>
         <createTable tableName="Product">
             <column name="id" type="BIGSERIAL" autoIncrement="true">
                 <constraints primaryKey="true" />
@@ -44,7 +54,13 @@
         </createIndex>
     </changeSet>
 
+
     <changeSet id="3-create-orders-table" author="lesflq">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="Orders"/>
+            </not>
+        </preConditions>
         <createTable tableName="Orders">
             <column name="id" type="BIGSERIAL" autoIncrement="true">
                 <constraints primaryKey="true" />
@@ -62,6 +78,11 @@
     </changeSet>
 
     <changeSet id="4-create-order-product-table" author="lesflq">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="Order_Product"/>
+            </not>
+        </preConditions>
         <createTable tableName="Order_Product">
             <column name="order_id" type="BIGINT">
                 <constraints nullable="false" />

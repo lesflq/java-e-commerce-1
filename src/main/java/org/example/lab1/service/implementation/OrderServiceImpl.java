@@ -47,8 +47,11 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Transactional
-    public void deleteOrder(Long id) {
-        orderRepository.deleteById(id);
+    public void deleteOrder(Long orderId) {
+        if (!orderRepository.existsById(orderId)) {
+            throw new EntityNotFoundException("Order not found");
+        }
+        orderRepository.deleteById(orderId);
     }
 
     @Transactional
