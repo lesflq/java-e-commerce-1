@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <changeSet id="1-create-category-table" author="lesflq">
+        <createTable tableName="Category">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2-create-product-table" author="lesflq">
+        <createTable tableName="Product">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="price" type="NUMERIC(10, 2)">
+                <constraints nullable="false" />
+            </column>
+            <column name="category_id" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+            <column name="description" type="TEXT" />
+        </createTable>
+        <addForeignKeyConstraint baseTableName="Product" baseColumnNames="category_id"
+                                 constraintName="fk_product_category"
+                                 referencedTableName="Category" referencedColumnNames="id"
+                                 onDelete="CASCADE" />
+        <addUniqueConstraint tableName="Product"
+                             columnNames="name, category_id"
+                             constraintName="unique_product_name_per_category" />
+        <createIndex tableName="Product" indexName="idx_product_name">
+            <column name="name" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="3-create-orders-table" author="lesflq">
+        <createTable tableName="Orders">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="order_date" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false" />
+            </column>
+            <column name="customer_name" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="4-create-order-product-table" author="lesflq">
+        <createTable tableName="Order_Product">
+            <column name="order_id" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+            <column name="product_id" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+            <column name="amount" type="INT">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="Order_Product" columnNames="order_id, product_id"
+                       constraintName="pk_order_product" />
+        <addForeignKeyConstraint baseTableName="Order_Product" baseColumnNames="order_id"
+                                 constraintName="fk_order_product_order"
+                                 referencedTableName="Orders" referencedColumnNames="id"
+                                 onDelete="CASCADE" />
+        <addForeignKeyConstraint baseTableName="Order_Product" baseColumnNames="product_id"
+                                 constraintName="fk_order_product_product"
+                                 referencedTableName="Product" referencedColumnNames="id"
+                                 onDelete="CASCADE" />
+    </changeSet>
+
+</databaseChangeLog>
