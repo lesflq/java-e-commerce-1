@@ -1,5 +1,6 @@
 package org.example.lab1.DTO;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import lombok.Builder;
@@ -18,6 +19,8 @@ public class OrderDTO {
     @Past
     LocalDateTime orderDate;
     String customerName;
+    @Email
+    String email;
 
 
 }
