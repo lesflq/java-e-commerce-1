@@ -40,6 +40,8 @@ dependencies {
     implementation 'jakarta.servlet:jakarta.servlet-api:6.1.0'
     implementation 'org.thymeleaf:thymeleaf-spring6:3.1.2.RELEASE'
     implementation group: 'org.liquibase', name: 'liquibase-core', version: '4.30.0'
+    testImplementation 'org.testcontainers:testcontainers:1.19.0'
+    testImplementation 'org.testcontainers:postgresql:1.19.0'
 
     liquibaseRuntime 'org.liquibase:liquibase-core:4.30.0'
     liquibaseRuntime 'org.postgresql:postgresql:42.7.4'
@@ -48,6 +50,10 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.34'
     testAnnotationProcessor 'org.mapstruct:mapstruct-processor:1.6.2'
+    testImplementation 'org.testcontainers:testcontainers:1.20.4'
+    testImplementation 'org.testcontainers:junit-jupiter:1.20.4'
+    testImplementation 'com.h2database:h2'
+
     testImplementation 'org.projectlombok:lombok:1.18.34'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -75,5 +81,7 @@ liquibase {
 
 test {
     useJUnitPlatform()
+
+    environment 'DOCKER_HOST', System.getenv('DOCKER_HOST')
 }
 

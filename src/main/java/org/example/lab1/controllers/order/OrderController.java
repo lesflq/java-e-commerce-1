@@ -34,21 +34,4 @@ public class OrderController {
         orderService.deleteOrder(orderId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
-
-    @PostMapping("/{orderId}/addProduct")
-    public ResponseEntity<OrderDTO> addProductToOrder(
-            @PathVariable Long orderId,
-            @RequestParam Long productId,
-            @RequestParam int amount) {
-        OrderDTO updatedOrder = orderService.addProductToOrder(orderId, productId, amount);
-        return ResponseEntity.ok(updatedOrder);
-    }
-
-    @DeleteMapping("/{orderId}/removeProduct")
-    public ResponseEntity<OrderDTO> removeProductFromOrder(
-            @PathVariable Long orderId,
-            @RequestParam Long productId) {
-        OrderDTO updatedOrder = orderService.removeProductFromOrder(orderId, productId);
-        return ResponseEntity.ok(updatedOrder);
-    }
 }

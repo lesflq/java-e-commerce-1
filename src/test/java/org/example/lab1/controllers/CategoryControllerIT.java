@@ -2,30 +2,38 @@ package org.example.lab1.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.lab1.DTO.CategoryDTO;
-import org.example.lab1.service.implementation.CategoryServiceImpl;
+import org.example.lab1.repository.CategoryRepository;
+import org.example.lab1.repository.entity.category.CategoryEntity;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.util.Arrays;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
+@Testcontainers
 class CategoryControllerIT {
 
-    @MockBean
-    private CategoryServiceImpl categoryService;
+    @Container
+    private static final PostgreSQLContainer<?> postgresContainer =
+            new PostgreSQLContainer<>("postgres:latest")
+                    .withDatabaseName("postgres")
+                    .withUsername("postgres")
+                    .withPassword("root");
 
     @Autowired
     private MockMvc mockMvc;
@@ -33,97 +41,77 @@ class CategoryControllerIT {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @BeforeEach
+    void setUp() {
+        categoryRepository.deleteAll();
+    }
     @Test
     void testCreateCategory() throws Exception {
         CategoryDTO categoryDTO = CategoryDTO.builder()
-                .id(1L)
                 .name("Test Category")
                 .build();
-
-        CategoryDTO createdCategory = CategoryDTO.builder()
-                .id(1L)
-                .name("Created Category")
-                .build();
-
-        when(categoryService.createCategory(any(CategoryDTO.class))).thenReturn(createdCategory);
 
         mockMvc.perform(post("/api/v1/categories")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoryDTO)))
                 .andExpect(status().isCreated())
-                .andExpect(content().json(objectMapper.writeValueAsString(createdCategory)));
-
-        verify(categoryService, times(1)).createCategory(any(CategoryDTO.class));
+                .andExpect(jsonPath("$.name").value("Test Category"));
     }
-
     @Test
     void testGetAllCategories() throws Exception {
-        List<CategoryDTO> categoryList = Arrays.asList(
-                CategoryDTO.builder().id(1L).name("Category 1").build(),
-                CategoryDTO.builder().id(2L).name("Category 2").build()
-        );
-
-        when(categoryService.getAllCategories()).thenReturn(categoryList);
+        categoryRepository.saveAll(List.of(
+                CategoryEntity.builder().name("Category 1").build(),
+                CategoryEntity.builder().name("Category 2").build()
+        ));
 
         mockMvc.perform(get("/api/v1/categories")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(categoryList)));
-
-        verify(categoryService, times(1)).getAllCategories();
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].name").value("Category 1"))
+                .andExpect(jsonPath("$[1].name").value("Category 2"));
     }
-
     @Test
     void testGetCategoryById() throws Exception {
-        Long categoryId = 1L;
-        CategoryDTO categoryDTO = CategoryDTO.builder()
-                .id(1L)
-                .name("Category 1")
-                .build();
+        // Додати категорію у базу даних
+        CategoryEntity category = categoryRepository.save(
+                CategoryEntity.builder().name("Test Category").build()
+        );
 
-        when(categoryService.getCategoryById(anyLong())).thenReturn(categoryDTO);
-
-        mockMvc.perform(get("/api/v1/categories/{id}", categoryId)
+        mockMvc.perform(get("/api/v1/categories/{id}", category.getId())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(categoryDTO)));
-
-        verify(categoryService, times(1)).getCategoryById(anyLong());
+                .andExpect(jsonPath("$.name").value("Test Category"));
     }
-
     @Test
     void testUpdateCategory() throws Exception {
-        Long categoryId = 1L;
-        CategoryDTO categoryDTO = CategoryDTO.builder()
-                .id(1L)
+        CategoryEntity category = categoryRepository.save(
+                CategoryEntity.builder().name("Old Category").build()
+        );
+
+        CategoryDTO updatedCategoryDTO = CategoryDTO.builder()
                 .name("Updated Category")
                 .build();
 
-        CategoryDTO updatedCategory = CategoryDTO.builder()
-                .id(1L)
-                .name("Updated Category")
-                .build();
-
-        when(categoryService.updateCategory(anyLong(), any(CategoryDTO.class))).thenReturn(updatedCategory);
-
-        mockMvc.perform(put("/api/v1/categories/{id}", categoryId)
+        mockMvc.perform(put("/api/v1/categories/{id}", category.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(categoryDTO)))
+                        .content(objectMapper.writeValueAsString(updatedCategoryDTO)))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(updatedCategory)));
-
-        verify(categoryService, times(1)).updateCategory(anyLong(), any(CategoryDTO.class));
+                .andExpect(jsonPath("$.name").value("Updated Category"));
     }
-
     @Test
     void testDeleteCategory() throws Exception {
-        Long categoryId = 1L;
+        CategoryEntity category = categoryRepository.save(
+                CategoryEntity.builder().name("Test Category").build()
+        );
 
-        mockMvc.perform(delete("/api/v1/categories/{id}", categoryId)
+        mockMvc.perform(delete("/api/v1/categories/{id}", category.getId())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
-        verify(categoryService, times(1)).deleteCategory(anyLong());
+        assertFalse(categoryRepository.existsById(category.getId()));
     }
 }
-

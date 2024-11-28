@@ -1,8 +1,12 @@
 package org.example.lab1.mappers;
 
 import org.example.lab1.DTO.OrderDTO;
+import org.example.lab1.DTO.OrderEntryDTO;
 import org.example.lab1.domain.order.Order;
+import org.example.lab1.domain.product.Product;
 import org.example.lab1.repository.entity.order.OrderEntity;
+import org.example.lab1.repository.entity.order.OrderEntryEntity;
+import org.example.lab1.repository.entity.product.ProductEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -11,23 +15,13 @@ import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public interface OrderMapper {
-
     OrderDTO toOrderDTO(OrderEntity order);
 
     OrderEntity toOrderEntity(OrderDTO orderDTO);
 
-    List<OrderDTO> toOrderDTOList(List<Order> ordersList);
-
-    List<OrderEntity> toOrderEntityList(List<OrderDTO> ordersDTOList);
-
-    @Mapping(source = "orderProducts", target = "orderProducts")
-    default List<OrderDTO> mapOrderEntries(List<OrderEntity> orderEntries) {
+    default List<ProductEntity> mapOrderEntriesToProducts(List<OrderEntryEntity> orderEntries) {
         return orderEntries.stream()
-                .map(this::toOrderEntryDTO)
+                .map(OrderEntryEntity::getProduct)
                 .collect(Collectors.toList());
     }
-
-    OrderDTO toOrderEntryDTO(OrderEntity orderEntry);
-    Order toOrderEntryEntity(OrderDTO orderEntryDTO);
 }
-

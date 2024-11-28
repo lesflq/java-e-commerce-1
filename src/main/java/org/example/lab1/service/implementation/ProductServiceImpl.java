@@ -67,16 +67,27 @@ public class ProductServiceImpl implements ProductService {
 
     @Transactional
     public ProductDTO updateProduct(Long id, ProductDTO productDTO) {
-        ProductEntity product = productRepository.findById(id).
-                orElseThrow(() -> new RuntimeException("Product not found"));
+        // Знаходимо продукт за ID
+        ProductEntity product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
 
+        // Знаходимо категорію за ID
         CategoryEntity category = categoryRepository.findById(productDTO.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("Category not found"));
 
-        product.toBuilder().name(productDTO.getName()).price(productDTO.getPrice())
-                .description(productDTO.getDescription()).category(category).build();
-        System.out.println("Product retrieved: " + product);
+        // Оновлюємо поля продукту
+        product.setName(productDTO.getName());
+        product.setPrice(productDTO.getPrice());
+        product.setDescription(productDTO.getDescription());
+        product.setCategory(category);
+
+        // Логування оновленого об'єкта
+        System.out.println("Product updated: " + product);
+
+        // Зберігаємо продукт
         ProductEntity savedProduct = productRepository.save(product);
+
+        // Мапимо та повертаємо оновлений DTO
         return productMapper.toDTO(savedProduct);
     }
 

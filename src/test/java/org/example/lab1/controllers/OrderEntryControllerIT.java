@@ -1,20 +1,39 @@
 package org.example.lab1.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import org.example.lab1.DTO.OrderEntryDTO;
+import org.example.lab1.repository.CategoryRepository;
+import org.example.lab1.repository.OrderEntryRepository;
+import org.example.lab1.repository.OrderRepository;
+import org.example.lab1.repository.ProductRepository;
+import org.example.lab1.repository.entity.category.CategoryEntity;
+import org.example.lab1.repository.entity.order.OrderEntity;
+import org.example.lab1.repository.entity.order.OrderEntryEntity;
+import org.example.lab1.repository.entity.order.OrderEntryId;
+import org.example.lab1.repository.entity.product.ProductEntity;
 import org.example.lab1.service.OrderEntryService;
 import org.example.lab1.service.implementation.OrderEntryServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -22,10 +41,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
+@Testcontainers
 class OrderEntryControllerIT {
 
-    @MockBean
-    private OrderEntryServiceImpl orderEntryService;
+    @Container
+    private static final PostgreSQLContainer<?> postgresContainer =
+            new PostgreSQLContainer<>("postgres:latest")
+                    .withDatabaseName("postgres")
+                    .withUsername("postgres")
+                    .withPassword("root");
 
     @Autowired
     private MockMvc mockMvc;
@@ -33,57 +58,143 @@ class OrderEntryControllerIT {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private OrderRepository orderRepository;
+
+    @Autowired
+    private ProductRepository productRepository;
+
+    @Autowired
+    private OrderEntryRepository orderEntryRepository;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @BeforeEach
+    void setUp() {
+        orderEntryRepository.deleteAll();
+        orderRepository.deleteAll();
+        productRepository.deleteAll();
+        categoryRepository.deleteAll();
+    }
     @Test
     void testAddProductToOrder() throws Exception {
-        Long orderId = 1L;
-        Long productId = 101L;
-        int amount = 2;
+        CategoryEntity category = categoryRepository.save(
+                CategoryEntity.builder()
+                        .name("Test Category")
+                        .build()
+        );
+
+        ProductEntity product = productRepository.save(
+                ProductEntity.builder()
+                        .name("Test Product")
+                        .price(BigDecimal.valueOf(100.0))
+                        .description("Test Description")
+                        .category(category)
+                        .build()
+        );
+
+        OrderEntity order = orderRepository.save(
+                OrderEntity.builder()
+                        .customerName("Test Customer")
+                        .orderDate(LocalDateTime.now())
+                        .email("testcustomer@mail.com")
+                        .build()
+        );
 
         OrderEntryDTO orderEntryDTO = OrderEntryDTO.builder()
-                .orderId(orderId)
-                .productId(productId)
-                .amount(amount)
+                .productId(product.getId())
+                .amount(3)
                 .build();
 
-        when(orderEntryService.addProductToOrder(orderId, productId, amount)).thenReturn(orderEntryDTO);
-
-        mockMvc.perform(post("/api/v1/order/entry/{orderId}/products", orderId)
-                        .param("productId", productId.toString())
-                        .param("amount", String.valueOf(amount))
-                        .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post("/api/v1/order/entry/{orderId}/products", order.getId())
+                        .param("productId", product.getId().toString())
+                        .param("amount", "3")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(orderEntryDTO)))
                 .andExpect(status().isCreated())
-                .andExpect(content().json(objectMapper.writeValueAsString(orderEntryDTO)));
-
-        verify(orderEntryService, times(1)).addProductToOrder(anyLong(), anyLong(), anyInt());
+                .andExpect(jsonPath("$.productId").value(product.getId()))
+                .andExpect(jsonPath("$.amount").value(3));
     }
-
     @Test
     void testRemoveProductFromOrder() throws Exception {
-        Long orderId = 1L;
-        Long productId = 101L;
+        CategoryEntity category = categoryRepository.save(
+                CategoryEntity.builder()
+                        .name("Test Category")
+                        .build()
+        );
 
-        mockMvc.perform(delete("/api/v1/order/entry/{orderId}/products/{productId}", orderId, productId)
+        ProductEntity product = productRepository.save(
+                ProductEntity.builder()
+                        .name("Test Product")
+                        .price(BigDecimal.valueOf(100.0))
+                        .description("Test Description")
+                        .category(category)
+                        .build()
+        );
+
+        OrderEntity order = orderRepository.save(
+                OrderEntity.builder()
+                        .customerName("Test Customer")
+                        .orderDate(LocalDateTime.now())
+                        .email("testcustomer@mail.com")
+                        .build()
+        );
+
+        OrderEntryId orderEntryId = new OrderEntryId(order.getId(), product.getId());
+
+        OrderEntryEntity orderEntry = OrderEntryEntity.builder()
+                .id(orderEntryId) // Встановлюємо складений ключ
+                .order(order)
+                .product(product)
+                .amount(3)
+                .build();
+
+        mockMvc.perform(delete("/api/v1/order/entry/{orderId}/products/{productId}", order.getId(), product.getId())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
-        verify(orderEntryService, times(1)).removeProductFromOrder(anyLong(), anyLong());
+        assertFalse(orderEntryRepository.existsById(orderEntry.getId()));
     }
-
     @Test
     void testGetOrderEntries() throws Exception {
-        Long orderId = 1L;
-        List<OrderEntryDTO> orderEntries = Arrays.asList(
-                OrderEntryDTO.builder().orderId(orderId).productId(101L).amount(2).build(),
-                OrderEntryDTO.builder().orderId(orderId).productId(102L).amount(1).build()
+        CategoryEntity category = categoryRepository.save(
+                CategoryEntity.builder()
+                        .name("Test Category")
+                        .build()
         );
 
-        when(orderEntryService.getOrderEntries(orderId)).thenReturn(orderEntries);
+        ProductEntity product = productRepository.save(
+                ProductEntity.builder()
+                        .name("Test Product")
+                        .price(BigDecimal.valueOf(100.0))
+                        .description("Test Description")
+                        .category(category)
+                        .build()
+        );
 
-        mockMvc.perform(get("/api/v1/order/entry/{orderId}/products", orderId)
+        OrderEntity order = orderRepository.save(
+                OrderEntity.builder()
+                        .customerName("Test Customer")
+                        .orderDate(LocalDateTime.now())
+                        .email("testcustomer@mail.com")
+                        .build()
+        );
+
+        OrderEntryId orderEntryId = new OrderEntryId(order.getId(), product.getId());
+
+        OrderEntryEntity orderEntry = OrderEntryEntity.builder()
+                .id(orderEntryId) // Встановлюємо складений ключ
+                .order(order)
+                .product(product)
+                .amount(3)
+                .build();
+        orderEntryRepository.save(orderEntry);
+
+
+        mockMvc.perform(get("/api/v1/order/entry/{orderId}/products", order.getId())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(orderEntries)));
-
-        verify(orderEntryService, times(1)).getOrderEntries(anyLong());
+                .andExpect(jsonPath("$.length()").value(1));
     }
 }

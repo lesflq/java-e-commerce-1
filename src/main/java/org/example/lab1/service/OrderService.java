@@ -9,7 +9,4 @@ public interface OrderService {
 
     void deleteOrder(Long id);
 
-    OrderDTO addProductToOrder(Long orderId, Long productId, int amount);
-
-    OrderDTO removeProductFromOrder(Long orderId, Long productId);
 }

@@ -88,13 +88,10 @@ public class OrderServiceTest {
 
     @Test
     void testDeleteOrder_Success() {
-        // Мокуємо виклик existsById, щоб повертав true
         when(orderRepository.existsById(1L)).thenReturn(true);
 
-        // Викликаємо метод, який перевіряє існування замовлення і видаляє його
         orderService.deleteOrder(1L);
 
-        // Перевіряємо, чи було викликано метод deleteById з правильним аргументом
         verify(orderRepository).deleteById(1L);
     }
 
@@ -105,86 +102,6 @@ public class OrderServiceTest {
         assertThrows(EntityNotFoundException.class, () -> orderService.deleteOrder(1L));
     }
 
-    @Test
-    void testAddProductToOrder_Success() {
-        OrderDTO orderDTO = OrderDTO.builder()
-                .id(1L)
-                .orderDate(LocalDateTime.now())
-                .build();
 
-        ProductEntity productEntity = ProductEntity.builder()
-                .id(1L)
-                .name("Product")
-                .build();
-
-        OrderEntity orderEntity = OrderEntity.builder()
-                .id(1L)
-                .orderDate(LocalDateTime.now())
-                .orderEntries(new ArrayList<>())  // Ініціалізація списку
-                .build();
-
-        OrderEntryEntity orderEntryEntity = new OrderEntryEntity();
-        orderEntryEntity.setProduct(productEntity);
-        orderEntryEntity.setAmount(2);
-
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(orderEntity));
-        when(productRepository.findById(1L)).thenReturn(Optional.of(productEntity));
-        when(orderRepository.save(any(OrderEntity.class))).thenReturn(orderEntity);
-        when(orderMapper.toOrderDTO(any(OrderEntity.class))).thenReturn(orderDTO);
-
-        OrderDTO result = orderService.addProductToOrder(1L, 1L, 2);
-
-        assertNotNull(result);
-        assertEquals(1L, result.getId());
-    }
-
-    @Test
-    void testAddProductToOrder_OrderNotFound() {
-        when(orderRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThrows(EntityNotFoundException.class, () -> orderService.addProductToOrder(1L, 1L, 2));
-    }
-
-    @Test
-    void testAddProductToOrder_ProductNotFound() {
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(new OrderEntity()));
-        when(productRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThrows(EntityNotFoundException.class, () -> orderService.addProductToOrder(1L, 1L, 2));
-    }
-
-    @Test
-    void testRemoveProductFromOrder_Success() {
-        OrderDTO orderDTO = OrderDTO.builder()
-                .id(1L)
-                .orderDate(LocalDateTime.now())
-                .build();
-
-        ProductEntity productEntity = ProductEntity.builder()
-                .id(1L)
-                .name("Product")
-                .build();
-
-        OrderEntity orderEntity = OrderEntity.builder()
-                .id(1L)
-                .orderDate(LocalDateTime.now())
-                .orderEntries(new ArrayList<>())  // Ініціалізація списку
-                .build();
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(orderEntity));
-        when(orderRepository.save(any(OrderEntity.class))).thenReturn(orderEntity);
-        when(orderMapper.toOrderDTO(any(OrderEntity.class))).thenReturn(orderDTO);
-
-        OrderDTO result = orderService.removeProductFromOrder(1L, 1L);
-
-        assertNotNull(result);
-        assertEquals(1L, result.getId());
-    }
-
-    @Test
-    void testRemoveProductFromOrder_OrderNotFound() {
-        when(orderRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThrows(EntityNotFoundException.class, () -> orderService.removeProductFromOrder(1L, 1L));
-    }
 }
 

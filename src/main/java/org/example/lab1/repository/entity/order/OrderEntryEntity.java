@@ -2,6 +2,7 @@ package org.example.lab1.repository.entity.order;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.lab1.repository.entity.product.ProductEntity;
@@ -11,6 +12,7 @@ import org.example.lab1.repository.entity.product.ProductEntity;
 @Table(name = "order_product")
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder(toBuilder = true)
 public class OrderEntryEntity {
 
     @EmbeddedId

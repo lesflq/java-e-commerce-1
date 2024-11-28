@@ -54,50 +54,5 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.deleteById(orderId);
     }
 
-    @Transactional
-    public OrderDTO addProductToOrder(Long orderId, Long productId, int amount) {
-        OrderEntity order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new EntityNotFoundException("Order not found"));
-        ProductEntity product = productRepository.findById(productId)
-                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
 
-        // Перевіряємо, чи товар вже є у замовленні
-        OrderEntryEntity existingEntry = order.getOrderEntries().stream()
-                .filter(entry -> entry.getProduct().getId().equals(productId))
-                .findFirst()
-                .orElse(null);
-
-        if (existingEntry != null) {
-            // Оновлюємо кількість, якщо товар вже є
-            existingEntry.setAmount(existingEntry.getAmount() + amount);
-        } else {
-            // Додаємо новий товар у замовлення
-            OrderEntryEntity newEntry = new OrderEntryEntity();
-            newEntry.setOrder(order);
-            newEntry.setProduct(product);
-            newEntry.setAmount(amount);
-
-            OrderEntryId entryId = new OrderEntryId();
-            entryId.setOrderId(order.getId());
-            entryId.setProductId(product.getId());
-            newEntry.setId(entryId);
-
-            order.getOrderEntries().add(newEntry);
-        }
-
-        OrderEntity updatedOrder = orderRepository.save(order);
-        return orderMapper.toOrderDTO(updatedOrder);
-    }
-
-    @Transactional
-    public OrderDTO removeProductFromOrder(Long orderId, Long productId) {
-        OrderEntity order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new EntityNotFoundException("Order not found"));
-
-        // Видаляємо товар із замовлення
-        order.getOrderEntries().removeIf(entry -> entry.getProduct().getId().equals(productId));
-
-        OrderEntity updatedOrder = orderRepository.save(order);
-        return orderMapper.toOrderDTO(updatedOrder);
-    }
 }

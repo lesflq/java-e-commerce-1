@@ -14,7 +14,7 @@ import java.util.List;
 @Builder(toBuilder = true)
 public class OrderDTO {
     long id;
-    List<Product> products;
+    List<OrderEntryDTO> orderEntries;
     LocalDateTime orderDate;
     String customerName;
     @Email
