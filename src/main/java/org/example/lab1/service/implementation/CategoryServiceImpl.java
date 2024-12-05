@@ -1,16 +1,19 @@
 package org.example.lab1.service.implementation;
 
 import org.example.lab1.DTO.CategoryDTO;
-import org.example.lab1.domain.category.Category;
+import org.example.lab1.exception.DatabaseException;
 import org.example.lab1.mappers.CategoryMapper;
 import org.example.lab1.repository.CategoryRepository;
 import org.example.lab1.repository.entity.category.CategoryEntity;
 import org.example.lab1.service.CategoryService;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class CategoryServiceImpl implements CategoryService {
@@ -23,20 +26,20 @@ public class CategoryServiceImpl implements CategoryService {
         this.categoryRepository = categoryRepository;
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.NESTED)
     public CategoryDTO createCategory(CategoryDTO CategoryDTO) {
         CategoryEntity category = categoryMapper.toEntity(CategoryDTO);
         CategoryEntity savedCategory = categoryRepository.save(category);
         return categoryMapper.toDTO(savedCategory);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<CategoryDTO> getAllCategories() {
         List<CategoryEntity> categories = new ArrayList<>(categoryRepository.findAll());
         return categoryMapper.toCategoryDTOList(categories);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public CategoryDTO getCategoryById(Long id) {
         CategoryEntity category = categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Category not found"));
@@ -44,7 +47,7 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryMapper.toDTO(category);
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.NESTED)
     public CategoryDTO updateCategory(Long id, CategoryDTO categoryDTO) {
         CategoryEntity category = categoryRepository.findById(id).
                 orElseThrow(() -> new RuntimeException("Category not found"))
@@ -56,10 +59,13 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Transactional
     public void deleteCategory(Long id) {
-        if (!categoryRepository.existsById(id)) {
-            throw new RuntimeException("Category not found");
+        try {
+            if (categoryRepository.existsById(id)) {
+                categoryRepository.deleteById(id);
+            }
+        } catch (RuntimeException ex) {
+            throw new DatabaseException("Failed to delete category due to database error", ex);
         }
-        categoryRepository.deleteById(id); // видаляємо продукт з бази даних
     }
 
 }

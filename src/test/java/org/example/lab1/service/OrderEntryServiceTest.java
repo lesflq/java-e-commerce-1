@@ -21,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -124,7 +125,7 @@ public class OrderEntryServiceTest {
         Long orderId = 1L;
 
         OrderEntryEntity orderEntry1 = new OrderEntryEntity(new OrderEntryId(orderId, 1L), orderEntity, productEntity, 1);
-        OrderEntryEntity orderEntry2 = new OrderEntryEntity(new OrderEntryId(orderId, 2L), orderEntity, productEntity, 3);
+        OrderEntryEntity orderEntry2 = new OrderEntryEntity(new OrderEntryId(orderId, 1L), orderEntity, productEntity, 3);
 
         when(orderEntryRepository.findByOrderId(orderId)).thenReturn(Arrays.asList(orderEntry1, orderEntry2));
 

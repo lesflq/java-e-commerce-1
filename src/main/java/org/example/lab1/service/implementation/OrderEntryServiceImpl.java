@@ -1,7 +1,6 @@
 package org.example.lab1.service.implementation;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.lab1.DTO.OrderEntryDTO;
 import org.example.lab1.repository.OrderEntryRepository;
@@ -13,8 +12,11 @@ import org.example.lab1.repository.entity.order.OrderEntryId;
 import org.example.lab1.repository.entity.product.ProductEntity;
 import org.example.lab1.service.OrderEntryService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +26,7 @@ public class OrderEntryServiceImpl implements OrderEntryService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
 
-    @Transactional
+    @Transactional(propagation = Propagation.NESTED)
     public OrderEntryDTO addProductToOrder(Long orderId, Long productId, int amount) {
         OrderEntity order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found with ID: " + orderId));
@@ -46,7 +48,7 @@ public class OrderEntryServiceImpl implements OrderEntryService {
         orderEntryRepository.deleteById(id);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<OrderEntryDTO> getOrderEntries(Long orderId) {
         List<OrderEntryEntity> entries = orderEntryRepository.findByOrderId(orderId);
         return entries.stream()

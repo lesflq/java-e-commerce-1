@@ -1,20 +1,21 @@
 package org.example.lab1.service.implementation;
 
+import org.example.lab1.exception.DatabaseException;
 import org.example.lab1.repository.OrderRepository;
 import org.example.lab1.repository.ProductRepository;
 import org.example.lab1.repository.entity.order.OrderEntity;
-import org.example.lab1.repository.entity.order.OrderEntryEntity;
-import org.example.lab1.repository.entity.order.OrderEntryId;
-import org.example.lab1.repository.entity.product.ProductEntity;
 import org.example.lab1.service.OrderService;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import org.example.lab1.DTO.OrderDTO;
 import org.example.lab1.mappers.OrderMapper;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -30,7 +31,7 @@ public class OrderServiceImpl implements OrderService {
         this.orderMapper = orderMapper;
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.NESTED)
     public OrderDTO createOrder(OrderDTO orderDTO) {
 
         OrderEntity order = orderMapper.toOrderEntity(orderDTO);
@@ -39,7 +40,7 @@ public class OrderServiceImpl implements OrderService {
         return orderMapper.toOrderDTO(savedOrder);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public OrderDTO getOrderById(Long id) {
         OrderEntity order = orderRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found"));
@@ -48,10 +49,13 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     public void deleteOrder(Long orderId) {
-        if (!orderRepository.existsById(orderId)) {
-            throw new EntityNotFoundException("Order not found");
+        try {
+            if (orderRepository.existsById(orderId)) {
+                orderRepository.deleteById(orderId);
+            }
+        } catch (DataAccessException ex) {
+            throw new DatabaseException("Failed to delete category due to database error", ex);
         }
-        orderRepository.deleteById(orderId);
     }
 
 

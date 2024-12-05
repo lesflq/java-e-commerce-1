@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import org.example.lab1.DTO.OrderDTO;
 import org.example.lab1.DTO.OrderEntryDTO;
+import org.example.lab1.DatabaseIntegrationTests;
 import org.example.lab1.repository.CategoryRepository;
 import org.example.lab1.repository.OrderEntryRepository;
 import org.example.lab1.repository.OrderRepository;
@@ -36,14 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Testcontainers
-class OrderControllerIT {
-
-    @Container
-    private static final PostgreSQLContainer<?> postgresContainer =
-            new PostgreSQLContainer<>("postgres:latest")
-                    .withDatabaseName("postgres")
-                    .withUsername("postgres")
-                    .withPassword("root");
+class OrderControllerIT extends DatabaseIntegrationTests {
 
     @Autowired
     private MockMvc mockMvc;

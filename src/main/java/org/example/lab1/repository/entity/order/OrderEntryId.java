@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 @Embeddable
 @Data
@@ -13,10 +14,11 @@ import java.io.Serializable;
 @NoArgsConstructor
 public class OrderEntryId implements Serializable {
 
-    @Column(name = "order_id")
+    @Column(name = "order_id", columnDefinition = "UUID")
+
     private Long orderId;
 
-    @Column(name = "product_id")
+    @Column(name = "product_id", columnDefinition = "UUID")
     private Long productId;
 
 }

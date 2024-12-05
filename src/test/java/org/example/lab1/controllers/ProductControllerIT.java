@@ -4,11 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import net.bytebuddy.utility.dispatcher.JavaDispatcher;
 import org.example.lab1.DTO.ProductDTO;
+import org.example.lab1.DatabaseIntegrationTests;
 import org.example.lab1.repository.CategoryRepository;
 import org.example.lab1.repository.ProductRepository;
 import org.example.lab1.repository.entity.category.CategoryEntity;
 import org.example.lab1.repository.entity.product.ProductEntity;
 import org.example.lab1.service.implementation.ProductServiceImpl;
+import org.hibernate.dialect.Database;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -34,14 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Testcontainers
-class ProductControllerIT {
-
-    @Container
-    private static final PostgreSQLContainer<?> postgresContainer =
-            new PostgreSQLContainer<>("postgres:latest")
-                    .withDatabaseName("postgres")
-                    .withUsername("postgres")
-                    .withPassword("root");
+class ProductControllerIT extends DatabaseIntegrationTests {
 
     @Autowired
     private MockMvc mockMvc;

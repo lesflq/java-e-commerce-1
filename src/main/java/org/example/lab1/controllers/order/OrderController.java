@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/v1/orders")
 public class OrderController {
@@ -25,12 +27,12 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
     }
     @GetMapping("/{orderId}")
-    public ResponseEntity<OrderDTO> getOrderById(@PathVariable long orderId) {
+    public ResponseEntity<OrderDTO> getOrderById(@PathVariable Long orderId) {
         OrderDTO orderDTO = orderService.getOrderById(orderId);
         return ResponseEntity.status(HttpStatus.OK).body(orderDTO);
     }
     @DeleteMapping("/{orderId}")
-    public ResponseEntity<Void> deleteOrderById(@PathVariable long orderId) {
+    public ResponseEntity<Void> deleteOrderById(@PathVariable Long orderId) {
         orderService.deleteOrder(orderId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

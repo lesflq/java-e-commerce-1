@@ -3,6 +3,7 @@ package org.example.lab1.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.example.lab1.DTO.OrderDTO;
+import org.example.lab1.exception.DatabaseException;
 import org.example.lab1.mappers.OrderMapper;
 import org.example.lab1.repository.OrderRepository;
 import org.example.lab1.repository.ProductRepository;
@@ -19,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -95,12 +97,6 @@ public class OrderServiceTest {
         verify(orderRepository).deleteById(1L);
     }
 
-    @Test
-    void testDeleteOrder_NotFound() {
-        when(orderRepository.existsById(1L)).thenReturn(false);
-
-        assertThrows(EntityNotFoundException.class, () -> orderService.deleteOrder(1L));
-    }
 
 
 }

@@ -2,6 +2,7 @@ package org.example.lab1.service.implementation;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.example.lab1.DTO.ProductDTO;
+import org.example.lab1.exception.DatabaseException;
 import org.example.lab1.mappers.ProductMapper;
 import org.example.lab1.repository.CategoryRepository;
 import org.example.lab1.repository.entity.category.CategoryEntity;
@@ -9,11 +10,14 @@ import org.example.lab1.repository.entity.product.ProductEntity;
 import org.example.lab1.service.ProductService;
 import org.example.lab1.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -31,7 +35,7 @@ public class ProductServiceImpl implements ProductService {
         this.categoryRepository = categoryRepository;
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.NESTED)
     public ProductDTO createProduct(ProductDTO productDTO) {
         CategoryEntity category = categoryRepository.findById(productDTO.getCategoryId())
                 .orElseThrow(() -> new EntityNotFoundException("Category not found with ID: " + productDTO.getCategoryId()));
@@ -51,13 +55,13 @@ public class ProductServiceImpl implements ProductService {
         return productMapper.toDTO(savedProduct);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<ProductDTO> getAllProducts() {
         List<ProductEntity> products = new ArrayList<>(productRepository.findAll());
         return productMapper.toProductDTOList(products);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public ProductDTO getProductById(Long id) {
         ProductEntity product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
@@ -65,7 +69,7 @@ public class ProductServiceImpl implements ProductService {
         return productMapper.toDTO(product);
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.NESTED)
     public ProductDTO updateProduct(Long id, ProductDTO productDTO) {
         // Знаходимо продукт за ID
         ProductEntity product = productRepository.findById(id)
@@ -94,10 +98,13 @@ public class ProductServiceImpl implements ProductService {
 
     @Transactional
     public void deleteProduct(Long id) {
-        if (!productRepository.existsById(id)) {
-            throw new RuntimeException("Product not found");
+        try {
+            if (productRepository.existsById(id)) {
+                productRepository.deleteById(id);
+            }
+        } catch (DataAccessException ex) {
+            throw new DatabaseException("Failed to delete category due to database error", ex);
         }
-        productRepository.deleteById(id);
     }
 
 

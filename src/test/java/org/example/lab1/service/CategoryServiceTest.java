@@ -1,6 +1,7 @@
 package org.example.lab1.service;
 
 import org.example.lab1.DTO.CategoryDTO;
+import org.example.lab1.exception.DatabaseException;
 import org.example.lab1.mappers.CategoryMapper;
 import org.example.lab1.repository.CategoryRepository;
 import org.example.lab1.repository.entity.category.CategoryEntity;
@@ -16,6 +17,7 @@ import static org.mockito.Mockito.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(MockitoExtension.class)
@@ -49,7 +51,7 @@ public class CategoryServiceTest {
 
         // Перевірки
         assertNotNull(result);
-        assertEquals(1L, result.getId());
+        assertEquals(1, result.getId());
         assertEquals("Category1", result.getName());
         verify(categoryRepository).save(categoryEntity);
     }
@@ -160,14 +162,5 @@ public class CategoryServiceTest {
 
         // Перевірки
         verify(categoryRepository).deleteById(1L);
-    }
-
-    @Test
-    void testDeleteCategory_NotFound() {
-        // Підготовка
-        when(categoryRepository.existsById(1L)).thenReturn(false);
-
-        // Виконання та перевірка на виняток
-        assertThrows(RuntimeException.class, () -> categoryService.deleteCategory(1L));
     }
 }

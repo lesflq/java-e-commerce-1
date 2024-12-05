@@ -81,7 +81,7 @@ liquibase {
 
 test {
     useJUnitPlatform()
-
+    maxParallelForks = 1
     environment 'DOCKER_HOST', System.getenv('DOCKER_HOST')
 }
 

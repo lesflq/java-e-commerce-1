@@ -2,6 +2,7 @@ package org.example.lab1.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.lab1.DTO.CategoryDTO;
+import org.example.lab1.DatabaseIntegrationTests;
 import org.example.lab1.repository.CategoryRepository;
 import org.example.lab1.repository.entity.category.CategoryEntity;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,14 +27,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Testcontainers
-class CategoryControllerIT {
+class CategoryControllerIT extends DatabaseIntegrationTests {
 
-    @Container
-    private static final PostgreSQLContainer<?> postgresContainer =
-            new PostgreSQLContainer<>("postgres:latest")
-                    .withDatabaseName("postgres")
-                    .withUsername("postgres")
-                    .withPassword("root");
 
     @Autowired
     private MockMvc mockMvc;

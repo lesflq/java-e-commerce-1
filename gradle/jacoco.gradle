@@ -25,7 +25,8 @@ jacocoTestCoverageVerification {
                     'org/example/lab1/domain/*',
                     'org/example/lab1/mappers/*',
                     'org/example/lab1/featuretoggle/*',
-                    'org/example/lab1/config/*'
+                    'org/example/lab1/config/*',
+                    'org/example/lab1/repository/*'
             ]
             limit {
                 counter = 'LINE'

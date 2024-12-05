@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.example.lab1.repository.entity.category.CategoryEntity;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Entity
 @Data
@@ -21,7 +22,8 @@ import java.math.BigDecimal;
 public class ProductEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "global_seq")
+    @SequenceGenerator(name = "global_seq", sequenceName = "global_seq", allocationSize = 50)
     private Long id;
 
     @Column(name = "name", nullable = false)
