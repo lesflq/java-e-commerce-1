@@ -1,21 +1,35 @@
 package org.example.lab1.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.example.lab1.DTO.ProductDTO;
-import org.example.lab1.domain.Product;
+import org.example.lab1.domain.product.Product;
 import org.example.lab1.mappers.ProductMapper;
+import org.example.lab1.repository.CategoryRepository;
+import org.example.lab1.repository.ProductRepository;
+import org.example.lab1.repository.entity.category.CategoryEntity;
+import org.example.lab1.repository.entity.product.ProductEntity;
 import org.example.lab1.service.implementation.ProductServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
+import java.math.BigDecimal;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class ProductServiceTest {
+@ExtendWith(MockitoExtension.class)
+public class ProductServiceTest {
+
+    @Mock
+    private ProductRepository productRepository;
+
+    @Mock
+    private CategoryRepository categoryRepository;
 
     @Mock
     private ProductMapper productMapper;
@@ -23,82 +37,178 @@ class ProductServiceTest {
     @InjectMocks
     private ProductServiceImpl productService;
 
-    private ProductDTO productDTO;
-    private Product product;
+    @Test
+    void testCreateProduct_Success() {
+        ProductDTO productDTO = ProductDTO.builder()
+                .id(1L)
+                .name("Product")
+                .price(BigDecimal.valueOf(100.0))
+                .description("Description")
+                .categoryId(1L)
+                .build();
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+        CategoryEntity categoryEntity = CategoryEntity.builder()
+                .id(1L)
+                .name("Category")
+                .build();
 
-        productDTO = ProductDTO.builder().name("Test Product").price(100.0).description("Test Description").categoryId(1L).build();
+        ProductEntity productEntity = ProductEntity.builder()
+                .id(1L)
+                .name("Product")
+                .price(BigDecimal.valueOf(100.0))
+                .description("Description")
+                .category(categoryEntity)
+                .build();
 
-        product = Product.builder().id(1L).name("Test Product").price(100.0).description("Test Description").categoryId(1L).build();
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(categoryEntity));
+        when(productRepository.save(any(ProductEntity.class))).thenReturn(productEntity);
+        when(productMapper.toDTO(any(ProductEntity.class))).thenReturn(productDTO);
 
-        when(productMapper.toEntity(productDTO)).thenReturn(product);
-        when(productMapper.toDTO(product)).thenReturn(productDTO);
+        ProductDTO result = productService.createProduct(productDTO);
+
+        assertNotNull(result);
+        assertEquals("Product", result.getName());
+        assertEquals(BigDecimal.valueOf(100.0), result.getPrice());
     }
 
     @Test
-    void testCreateProduct() {
-        ProductDTO createdProduct = productService.createProduct(productDTO);
+    void testCreateProduct_CategoryNotFound() {
+        ProductDTO productDTO = ProductDTO.builder()
+                .id(1L)
+                .name("Product")
+                .price(BigDecimal.valueOf(100.0))
+                .description("Description")
+                .categoryId(1L)
+                .build();
 
-        assertNotNull(createdProduct);
-        assertEquals("Test Product", createdProduct.getName());
-        verify(productMapper).toEntity(productDTO);
-        verify(productMapper).toDTO(product);
+        when(categoryRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(EntityNotFoundException.class, () -> productService.createProduct(productDTO));
     }
 
     @Test
     void testGetAllProducts() {
-        when(productMapper.toProductDTOList(anyList())).thenReturn(List.of(productDTO));
+        ProductEntity productEntity = ProductEntity.builder()
+                .id(1L)
+                .name("Product")
+                .price(BigDecimal.valueOf(100.0))
+                .description("Description")
+                .category(new CategoryEntity())
+                .build();
 
-        List<ProductDTO> products = productService.getAllProducts();
+        List<ProductEntity> productEntities = Arrays.asList(productEntity);
 
-        assertNotNull(products);
-        assertFalse(products.isEmpty());
-        assertEquals(1, products.size());
-        assertEquals("Test Product", products.get(0).getName());
-        verify(productMapper).toProductDTOList(anyList());
+        when(productRepository.findAll()).thenReturn(productEntities);
+        when(productMapper.toProductDTOList(anyList())).thenReturn(Collections.singletonList(
+                ProductDTO.builder()
+                        .id(1L)
+                        .name("Product")
+                        .price(BigDecimal.valueOf(100.0))
+                        .description("Description")
+                        .categoryId(1L)
+                        .build()));
+
+        List<ProductDTO> result = productService.getAllProducts();
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
     }
 
     @Test
-    void testGetProductById() {
-        productService.createProduct(productDTO); // Збереження продукту для подальшого пошуку
+    void testGetProductById_Success() {
+        ProductEntity productEntity = ProductEntity.builder()
+                .id(1L)
+                .name("Product")
+                .price(BigDecimal.valueOf(100.0))
+                .description("Description")
+                .category(new CategoryEntity())
+                .build();
 
-        ProductDTO foundProduct = productService.getProductById(1L);
+        when(productRepository.findById(1L)).thenReturn(Optional.of(productEntity));
+        when(productMapper.toDTO(any(ProductEntity.class))).thenReturn(ProductDTO.builder()
+                .id(1L)
+                .name("Product")
+                .price(BigDecimal.valueOf(100.0))
+                .description("Description")
+                .categoryId(1L)
+                .build());
 
-        assertNotNull(foundProduct);
-        assertEquals("Test Product", foundProduct.getName());
+        ProductDTO result = productService.getProductById(1L);
 
-        // Оскільки `toDTO` викликається двічі: один раз у `createProduct` і один раз у `getProductById`
-        verify(productMapper, times(2)).toDTO(any(Product.class));
+        assertNotNull(result);
+        assertEquals("Product", result.getName());
     }
 
     @Test
-    void testUpdateProduct() {
-        productService.createProduct(productDTO); // Збереження продукту для подальшого оновлення
+    void testGetProductById_NotFound() {
+        when(productRepository.findById(1L)).thenReturn(Optional.empty());
 
-        productDTO = productDTO.toBuilder().name("Updated Product").price(150.0).build();
-
-        when(productMapper.toDTO(any(Product.class))).thenReturn(productDTO);
-
-        ProductDTO updatedProduct = productService.updateProduct(1L, productDTO);
-
-        assertNotNull(updatedProduct);
-        assertEquals("Updated Product", updatedProduct.getName());
-        assertEquals(150.0, updatedProduct.getPrice());
-
-        // Оскільки `toDTO` викликається двічі: один раз у `createProduct` і один раз у `updateProduct`
-        verify(productMapper, times(2)).toDTO(any(Product.class));
+        assertThrows(RuntimeException.class, () -> productService.getProductById(1L));
     }
 
     @Test
-    void testDeleteProduct() {
-        productService.createProduct(productDTO);
+    void testUpdateProduct_Success() {
+        ProductDTO productDTO = ProductDTO.builder()
+                .id(1L)
+                .name("Updated Product")
+                .price(BigDecimal.valueOf(120.0))
+                .description("Updated Description")
+                .categoryId(1L)
+                .build();
 
-        assertDoesNotThrow(() -> productService.deleteProduct(1L));
+        ProductEntity productEntity = ProductEntity.builder()
+                .id(1L)
+                .name("Product")
+                .price(BigDecimal.valueOf(100.0))
+                .description("Description")
+                .category(new CategoryEntity())
+                .build();
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> productService.getProductById(1L));
-        assertEquals("Product not found", exception.getMessage());
+        CategoryEntity categoryEntity = CategoryEntity.builder()
+                .id(1L)
+                .name("Category")
+                .build();
+
+        when(productRepository.findById(1L)).thenReturn(Optional.of(productEntity));
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(categoryEntity));
+        when(productRepository.save(any(ProductEntity.class))).thenReturn(productEntity);
+        when(productMapper.toDTO(any(ProductEntity.class))).thenReturn(ProductDTO.builder()
+                .id(1L)
+                .name("Updated Product")
+                .price(BigDecimal.valueOf(120.0))
+                .description("Updated Description")
+                .categoryId(1L)
+                .build());
+
+        ProductDTO result = productService.updateProduct(1L, productDTO);
+
+        assertNotNull(result);
+        assertEquals("Updated Product", result.getName());
+        assertEquals(BigDecimal.valueOf(120.0), result.getPrice());
     }
+
+    @Test
+    void testUpdateProduct_ProductNotFound() {
+        ProductDTO productDTO = ProductDTO.builder()
+                .id(1L)
+                .name("Updated Product")
+                .price(BigDecimal.valueOf(120.0))
+                .description("Updated Description")
+                .categoryId(1L)
+                .build();
+
+        when(productRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> productService.updateProduct(1L, productDTO));
+    }
+
+    @Test
+    void testDeleteProduct_Success() {
+        when(productRepository.existsById(1L)).thenReturn(true);
+
+        productService.deleteProduct(1L);
+
+        verify(productRepository).deleteById(1L);
+    }
+
 }

@@ -1,23 +1,20 @@
 package org.example.lab1.DTO;
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.Email;
 import lombok.Builder;
 import lombok.Value;
-import org.example.lab1.domain.Product;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Value
 @Builder(toBuilder = true)
 public class OrderDTO {
-    long id;
-    List<Product> products;
-    @NotNull
-    @Past
+    Long id;
+    List<OrderEntryDTO> orderEntries;
     LocalDateTime orderDate;
     String customerName;
-
-
+    @Email
+    String email;
 }

@@ -1,32 +1,43 @@
 package org.example.lab1.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
+import net.bytebuddy.utility.dispatcher.JavaDispatcher;
 import org.example.lab1.DTO.ProductDTO;
-import org.example.lab1.service.ProductService;
+import org.example.lab1.DatabaseIntegrationTests;
+import org.example.lab1.repository.CategoryRepository;
+import org.example.lab1.repository.ProductRepository;
+import org.example.lab1.repository.entity.category.CategoryEntity;
+import org.example.lab1.repository.entity.product.ProductEntity;
 import org.example.lab1.service.implementation.ProductServiceImpl;
+import org.hibernate.dialect.Database;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.testcontainers.containers.PostgreSQLContainer;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.junit.jupiter.Container;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class ProductControllerIT {
-
-    @MockBean
-    private ProductServiceImpl productService;
+@ActiveProfiles("test")
+@Testcontainers
+class ProductControllerIT extends DatabaseIntegrationTests {
 
     @Autowired
     private MockMvc mockMvc;
@@ -34,79 +45,141 @@ class ProductControllerIT {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private ProductRepository productRepository;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @BeforeEach
+    void setUp() {
+        productRepository.deleteAll();
+        categoryRepository.deleteAll();
+    }
     @Test
     void testCreateProduct() throws Exception {
+        CategoryEntity category = categoryRepository.save(
+                CategoryEntity.builder()
+                        .name("Test Category")
+                        .build()
+        );
 
-        ProductDTO productDTO = ProductDTO.builder().name("Test Product Star").price(100.0).build();
-
-        ProductDTO createdProduct = ProductDTO.builder().name("Test Product Comet").price(1523.0).build();
-
-        when(productService.createProduct(any(ProductDTO.class))).thenReturn(createdProduct);
+        ProductDTO productDTO = ProductDTO.builder()
+                .name("Test Product Star")
+                .price(BigDecimal.valueOf(100.0))
+                .description("Test description")
+                .categoryId(category.getId())
+                .build();
 
         mockMvc.perform(post("/api/v1/products")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(productDTO)))
                 .andExpect(status().isCreated())
-                .andExpect(content().json(objectMapper.writeValueAsString(createdProduct)));
-
-        verify(productService, times(1)).createProduct(any(ProductDTO.class));
+                .andExpect(jsonPath("$.name").value("Test Product Star"))
+                .andExpect(jsonPath("$.price").value(100.0));
     }
-
     @Test
     void testGetAllProducts() throws Exception {
-        List<ProductDTO> productList = new ArrayList<>(); // Заповни даними продуктів
+        CategoryEntity category = categoryRepository.save(
+                CategoryEntity.builder()
+                        .name("Test Category")
+                        .build()
+        );
 
-        when(productService.getAllProducts()).thenReturn(productList);
+        productRepository.saveAll(List.of(
+                ProductEntity.builder()
+                        .name("Product 1")
+                        .price(BigDecimal.valueOf(50.0))
+                        .description("Description 1")
+                        .category(category)
+                        .build(),
+                ProductEntity.builder()
+                        .name("Product 2")
+                        .price(BigDecimal.valueOf(150.0))
+                        .description("Description 2")
+                        .category(category)
+                        .build()
+        ));
 
         mockMvc.perform(get("/api/v1/products")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(productList)));
-
-        verify(productService, times(1)).getAllProducts();
+                .andExpect(jsonPath("$.length()").value(2));
     }
-
     @Test
     void testGetProductById() throws Exception {
-        Long productId = 1L;
-        ProductDTO product = ProductDTO.builder().build(); // Заповни даними продукту
+        CategoryEntity category = categoryRepository.save(
+                CategoryEntity.builder()
+                        .name("Test Category")
+                        .build()
+        );
 
-        when(productService.getProductById(anyLong())).thenReturn(product);
+        ProductEntity product = productRepository.save(
+                ProductEntity.builder()
+                        .name("Test Product")
+                        .price(BigDecimal.valueOf(100.0))
+                        .description("Test Description")
+                        .category(category)
+                        .build()
+        );
 
-        mockMvc.perform(get("/api/v1/products/{id}", productId)
+        mockMvc.perform(get("/api/v1/products/{id}", product.getId())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(product)));
-
-        verify(productService, times(1)).getProductById(anyLong());
+                .andExpect(jsonPath("$.name").value("Test Product"));
     }
-
     @Test
     void testUpdateProduct() throws Exception {
-        Long productId = 1L;
-        ProductDTO productDTO = ProductDTO.builder().name("Test Product Star").price(100.0).build();
+        CategoryEntity category = categoryRepository.save(
+                CategoryEntity.builder()
+                        .name("Test Category")
+                        .build()
+        );
 
-        ProductDTO updatedProduct = ProductDTO.builder().name("Test Product Comet").price(1902.0).build();
+        ProductEntity product = productRepository.save(
+                ProductEntity.builder()
+                        .name("Star Product")
+                        .price(BigDecimal.valueOf(100.0))
+                        .description("Test Description")
+                        .category(category)
+                        .build()
+        );
 
-        when(productService.updateProduct(anyLong(), any(ProductDTO.class))).thenReturn(updatedProduct);
+        ProductDTO updatedProductDTO = ProductDTO.builder()
+                .name("Galaxy Product")
+                .price(BigDecimal.valueOf(200.0))
+                .description("Updated Description")
+                .categoryId(category.getId())
+                .build();
 
-        mockMvc.perform(put("/api/v1/products/{id}", productId)
+        mockMvc.perform(put("/api/v1/products/{id}", product.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(productDTO)))
+                        .content(objectMapper.writeValueAsString(updatedProductDTO)))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(updatedProduct)));
-
-        verify(productService, times(1)).updateProduct(anyLong(), any(ProductDTO.class));
+                .andExpect(jsonPath("$.name").value("Galaxy Product"))
+                .andExpect(jsonPath("$.price").value(200.0));
     }
-
     @Test
     void testDeleteProduct() throws Exception {
-        Long productId = 1L;
+        CategoryEntity category = categoryRepository.save(
+                CategoryEntity.builder()
+                        .name("Test Category")
+                        .build()
+        );
 
-        mockMvc.perform(delete("/api/v1/products/{id}", productId)
+        ProductEntity product = productRepository.save(
+                ProductEntity.builder()
+                        .name("Test Product")
+                        .price(BigDecimal.valueOf(100.0))
+                        .description("Test Description")
+                        .category(category)
+                        .build()
+        );
+
+        mockMvc.perform(delete("/api/v1/products/{id}", product.getId())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
-        verify(productService, times(1)).deleteProduct(anyLong());
+        assertFalse(productRepository.existsById(product.getId()));
     }
 }

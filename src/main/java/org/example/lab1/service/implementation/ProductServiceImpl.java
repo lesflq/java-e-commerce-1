@@ -1,72 +1,110 @@
 package org.example.lab1.service.implementation;
 
-import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.persistence.EntityNotFoundException;
 import org.example.lab1.DTO.ProductDTO;
-import org.example.lab1.domain.Product;
+import org.example.lab1.exception.DatabaseException;
 import org.example.lab1.mappers.ProductMapper;
+import org.example.lab1.repository.CategoryRepository;
+import org.example.lab1.repository.entity.category.CategoryEntity;
+import org.example.lab1.repository.entity.product.ProductEntity;
 import org.example.lab1.service.ProductService;
+import org.example.lab1.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class ProductServiceImpl implements ProductService {
 
+    private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
     private final ProductMapper productMapper;
-    private final Map<Long, Product> mockProductDatabase = new HashMap<>(); // Plug for saving data
-    private Long productIdSequence = 1L; // Simulation of auto increments of an ID
 
     @Autowired
-    public ProductServiceImpl(ProductMapper productMapper) {
+    public ProductServiceImpl(ProductMapper productMapper,
+                              ProductRepository productRepository,
+                              CategoryRepository categoryRepository) {
         this.productMapper = productMapper;
+        this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
     }
 
-    @Override
+    @Transactional(propagation = Propagation.NESTED)
     public ProductDTO createProduct(ProductDTO productDTO) {
-        Product product = productMapper.toEntity(productDTO).toBuilder().id(productIdSequence++).build();
-        mockProductDatabase.put(product.getId(), product); // save data in "plug-database"
-        return productMapper.toDTO(product);
+        CategoryEntity category = categoryRepository.findById(productDTO.getCategoryId())
+                .orElseThrow(() -> new EntityNotFoundException("Category not found with ID: " + productDTO.getCategoryId()));
+
+        // Створюємо продукт
+        ProductEntity product = ProductEntity.builder()
+                .name(productDTO.getName())
+                .price(productDTO.getPrice())
+                .description(productDTO.getDescription())
+                .category(category) // Установлюємо категорію
+                .build();
+
+        // Зберігаємо продукт
+        ProductEntity savedProduct = productRepository.save(product);
+
+        // Повертаємо DTO
+        return productMapper.toDTO(savedProduct);
     }
 
-    @Override
+    @Transactional(readOnly = true)
     public List<ProductDTO> getAllProducts() {
-        List<Product> products = new ArrayList<>(mockProductDatabase.values());
+        List<ProductEntity> products = new ArrayList<>(productRepository.findAll());
         return productMapper.toProductDTOList(products);
     }
 
-    @Override
+    @Transactional(readOnly = true)
     public ProductDTO getProductById(Long id) {
-        Product product = mockProductDatabase.get(id);
-        if (product == null) {
-            throw new RuntimeException("Product not found");
-        }
+        ProductEntity product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
         return productMapper.toDTO(product);
     }
 
-    @Override
+    @Transactional(propagation = Propagation.NESTED)
     public ProductDTO updateProduct(Long id, ProductDTO productDTO) {
-        Product product = mockProductDatabase.get(id).toBuilder().name(productDTO.getName()).price(productDTO.getPrice())
-                .description(productDTO.getDescription()).categoryId(productDTO.getCategoryId()).build();
-        System.out.println("Product retrieved: " + product);
-        if (product == null) {
-            throw new RuntimeException("Product not found");
-        }
+        // Знаходимо продукт за ID
+        ProductEntity product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        mockProductDatabase.put(id, product); // insert updated data
-        return productMapper.toDTO(product);
+        // Знаходимо категорію за ID
+        CategoryEntity category = categoryRepository.findById(productDTO.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        // Оновлюємо поля продукту
+        product.setName(productDTO.getName());
+        product.setPrice(productDTO.getPrice());
+        product.setDescription(productDTO.getDescription());
+        product.setCategory(category);
+
+        // Логування оновленого об'єкта
+        System.out.println("Product updated: " + product);
+
+        // Зберігаємо продукт
+        ProductEntity savedProduct = productRepository.save(product);
+
+        // Мапимо та повертаємо оновлений DTO
+        return productMapper.toDTO(savedProduct);
     }
 
 
-    @Override
+    @Transactional
     public void deleteProduct(Long id) {
-        if (!mockProductDatabase.containsKey(id)) {
-            throw new RuntimeException("Product not found");
+        try {
+            if (productRepository.existsById(id)) {
+                productRepository.deleteById(id);
+            }
+        } catch (DataAccessException ex) {
+            throw new DatabaseException("Failed to delete category due to database error", ex);
         }
-        mockProductDatabase.remove(id); // видаляємо продукт
     }
 
 

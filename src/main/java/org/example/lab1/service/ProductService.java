@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import org.example.lab1.DTO.ProductDTO;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface ProductService {
     ProductDTO createProduct(ProductDTO productDTO);

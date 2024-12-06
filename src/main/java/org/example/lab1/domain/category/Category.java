@@ -1,12 +1,13 @@
-package org.example.lab1.domain;
+package org.example.lab1.domain.category;
 
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.UUID;
+
 @Value
 @Builder(toBuilder = true)
 public class Category {
-    long id;
+    Long id;
     String name;
-
 }

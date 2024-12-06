@@ -1,4 +1,4 @@
-package org.example.lab1.controllers;
+package org.example.lab1.controllers.product;
 
 import jakarta.validation.Valid;
 import org.example.lab1.DTO.ProductDTO;
@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/products")

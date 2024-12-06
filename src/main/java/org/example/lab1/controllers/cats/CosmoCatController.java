@@ -1,6 +1,5 @@
-package org.example.lab1.controllers;
+package org.example.lab1.controllers.cats;
 
-import org.example.lab1.service.CosmoCatService;
 import org.example.lab1.service.implementation.CosmoCatServiceImpl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -75,4 +75,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Void> handleFeatureToggleException(FeatureNotAvailableException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
+    @ExceptionHandler(DatabaseException.class)
+    public ResponseEntity<Void> handleDatabaseException(DatabaseException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
 }
