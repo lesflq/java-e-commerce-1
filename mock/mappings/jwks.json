@@ -1,0 +1,10 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/.well-known/jwks.json"
+  },
+  "response": {
+    "status": 200,
+    "body": "{\"keys\":[{\"kid\":\"1234\",\"kty\":\"RSA\",\"alg\":\"RS256\",\"use\":\"sig\",\"n\":\"...\",\"e\":\"AQAB\"}]}"
+  }
+}
